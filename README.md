@@ -1,4 +1,6 @@
-GitHub Issues Manager GitHub Issues Manager is a full-stack Angular application for exploring and managing GitHub repository issues with user authentication. ## Installation Use Node.js 18+ and npm to install the project dependencies. 
+# GitHub Issues Manager
+GitHub Issues Manager is a full-stack Angular application for exploring and managing GitHub repository issues with user authentication. 
+## Installation Use Node.js 18+ and npm to install the project dependencies. 
 ### Backend Setup 
 ``` bash 
 cd backend 
