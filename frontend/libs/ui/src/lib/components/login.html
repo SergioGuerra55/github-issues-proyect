@@ -1,0 +1,276 @@
+<div class="min-h-screen flex items-center justify-center p-4 relative bg-github-bg-primary font-github">
+  <!-- Patrón de fondo sutil -->
+  <div class="absolute inset-0 opacity-[0.02]">
+    <div class="w-full h-full" style="background-image: radial-gradient(circle at 1px 1px, #f0f6fc 1px, transparent 0); background-size: 24px 24px;"></div>
+  </div>
+  
+  <!-- Container principal -->
+  <div class="relative w-full max-w-sm">
+    <!-- Logo y header -->
+    <div class="text-center mb-8">
+      <!-- Logo GitHub-style -->
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-github-bg-tertiary border border-github-border-default rounded-lg mb-6">
+        <lucide-angular [img]="icons.Github" class="w-7 h-7 text-github-text-primary"></lucide-angular>
+      </div>
+      
+      <h1 class="text-2xl font-semibold text-github-text-primary mb-2">
+        Inicia sesión en Issues Manager
+      </h1>
+      <p class="text-github-text-secondary text-sm">
+        Gestiona y explora issues de repositorios de GitHub
+      </p>
+    </div>
+
+    <!-- Card principal -->
+    <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg shadow-github p-6">
+      
+      <!-- Tabs estilo GitHub -->
+      <div class="border-b border-github-border-muted mb-6">
+        <nav class="flex space-x-8">
+          <button 
+            (click)="selectTab('login')"
+            [class]="selectedTab() === 'login' ? 
+              'border-b-2 border-github-accent-blue pb-3 px-1 text-sm font-medium text-github-text-primary' : 
+              'pb-3 px-1 text-sm font-medium text-github-text-secondary hover:text-github-text-primary transition-colors'">
+            Iniciar sesión
+          </button>
+          <button 
+            (click)="selectTab('register')"
+            [class]="selectedTab() === 'register' ? 
+              'border-b-2 border-github-accent-blue pb-3 px-1 text-sm font-medium text-github-text-primary' : 
+              'pb-3 px-1 text-sm font-medium text-github-text-secondary hover:text-github-text-primary transition-colors'">
+            Registrarse
+          </button>
+        </nav>
+      </div>
+
+      <!-- Formulario de Login -->
+      <form *ngIf="selectedTab() === 'login'" (ngSubmit)="onLogin()" class="space-y-4">
+        <!-- Email/Username -->
+        <div>
+          <label class="block text-sm font-medium text-github-text-primary mb-2">
+            Nombre de usuario o dirección de correo electrónico
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              [value]="loginData().identifier"
+              (input)="updateLoginData('identifier', $any($event.target).value)"
+              name="identifier"
+              required
+              [class]="'w-full px-3 py-2 bg-github-bg-canvas border rounded-md text-github-text-primary placeholder-github-text-muted focus:outline-none transition-all duration-200 ' + 
+                       (loginData().identifier && loginData().identifier.length > 0 && loginData().identifier.length < 3 ? 
+                        'border-github-accent-danger focus:border-github-accent-danger focus:ring-1 focus:ring-github-accent-danger' : 
+                        'border-github-border-default focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue')"
+              placeholder="Introduce tu nombre de usuario o correo"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <lucide-angular [img]="icons.User" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+            </div>
+          </div>
+          <!-- Validación en tiempo real -->
+          <div *ngIf="loginData().identifier && loginData().identifier.length > 0 && loginData().identifier.length < 3" 
+               class="mt-1 text-xs text-github-accent-danger flex items-center">
+            <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+            Debe tener al menos 3 caracteres
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-sm font-medium text-github-text-primary">
+              Contraseña
+            </label>
+          </div>
+          <div class="relative">
+            <input 
+              type="password" 
+              [value]="loginData().password"
+              (input)="updateLoginData('password', $any($event.target).value)"
+              name="password"
+              required
+              [class]="'w-full px-3 py-2 bg-github-bg-canvas border rounded-md text-github-text-primary placeholder-github-text-muted focus:outline-none transition-all duration-200 ' + 
+                       (loginData().password && loginData().password.length > 0 && loginData().password.length < 6 ? 
+                        'border-github-accent-danger focus:border-github-accent-danger focus:ring-1 focus:ring-github-accent-danger' : 
+                        'border-github-border-default focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue')"
+              placeholder="Introduce tu contraseña"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <lucide-angular [img]="icons.Lock" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+            </div>
+          </div>
+          <!-- Validación en tiempo real -->
+          <div *ngIf="loginData().password && loginData().password.length > 0 && loginData().password.length < 6" 
+               class="mt-1 text-xs text-github-accent-danger flex items-center">
+            <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+            Debe tener al menos 6 caracteres
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <button 
+          type="submit"
+          [disabled]="authStore.isLoading() || !loginValidation().isValid"
+          class="w-full bg-github-accent-primary hover:bg-green-600 disabled:bg-github-text-muted disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-github-accent-primary focus:ring-offset-2 focus:ring-offset-github-bg-tertiary"
+        >
+          <span *ngIf="!authStore.isLoading()" class="flex items-center justify-center">
+            <lucide-angular [img]="icons.LogIn" class="w-4 h-4 mr-2"></lucide-angular>
+            Iniciar sesión
+          </span>
+          
+          <span *ngIf="authStore.isLoading()" class="flex items-center justify-center">
+            <lucide-angular [img]="icons.Loader2" class="w-4 h-4 mr-2 animate-spin"></lucide-angular>
+            Iniciando sesión...
+          </span>
+        </button>
+      </form>
+
+      <!-- Formulario de Registro -->
+      <form *ngIf="selectedTab() === 'register'" (ngSubmit)="onRegister()" class="space-y-4">
+        <!-- Username -->
+        <div>
+          <label class="block text-sm font-medium text-github-text-primary mb-2">
+            Nombre de usuario
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              [value]="registerData().username"
+              (input)="updateRegisterData('username', $any($event.target).value)"
+              name="username"
+              required
+              [class]="'w-full px-3 py-2 bg-github-bg-canvas border rounded-md text-github-text-primary placeholder-github-text-muted focus:outline-none transition-all duration-200 ' + 
+                       (hasFieldError('username') ? 
+                        'border-github-accent-danger focus:border-github-accent-danger focus:ring-1 focus:ring-github-accent-danger' : 
+                        'border-github-border-default focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue')"
+              placeholder="Elige un nombre de usuario"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <lucide-angular [img]="icons.User" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+            </div>
+          </div>
+          <!-- Validaciones para username -->
+          <div *ngIf="registerData().username && registerData().username.length > 0" class="mt-1 space-y-1">
+            <div *ngIf="registerData().username.length < 3" class="text-xs text-github-accent-danger flex items-center">
+              <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Debe tener al menos 3 caracteres
+            </div>
+            <div *ngIf="registerData().username.length >= 3 && !isValidUsername(registerData().username)" class="text-xs text-github-accent-danger flex items-center">
+              <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Solo letras, números y guiones bajos
+            </div>
+            <div *ngIf="isRegisterFieldValid('username')" class="text-xs text-github-accent-primary flex items-center">
+              <lucide-angular [img]="icons.CheckCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Nombre de usuario válido
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm font-medium text-github-text-primary mb-2">
+            Dirección de correo electrónico
+          </label>
+          <div class="relative">
+            <input 
+              type="email" 
+              [value]="registerData().email"
+              (input)="updateRegisterData('email', $any($event.target).value)"
+              name="email"
+              required
+              [class]="'w-full px-3 py-2 bg-github-bg-canvas border rounded-md text-github-text-primary placeholder-github-text-muted focus:outline-none transition-all duration-200 ' + 
+                       (hasFieldError('email') ? 
+                        'border-github-accent-danger focus:border-github-accent-danger focus:ring-1 focus:ring-github-accent-danger' : 
+                        'border-github-border-default focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue')"
+              placeholder="Introduce tu dirección de correo"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <lucide-angular [img]="icons.Mail" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+            </div>
+          </div>
+          <!-- Validación para email -->
+          <div *ngIf="registerData().email && registerData().email.length > 0" class="mt-1">
+            <div *ngIf="!isValidEmail(registerData().email)" class="text-xs text-github-accent-danger flex items-center">
+              <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Formato de email inválido
+            </div>
+            <div *ngIf="isValidEmail(registerData().email)" class="text-xs text-github-accent-primary flex items-center">
+              <lucide-angular [img]="icons.CheckCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Email válido
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-sm font-medium text-github-text-primary mb-2">
+            Contraseña
+          </label>
+          <div class="relative">
+            <input 
+              type="password" 
+              [value]="registerData().password"
+              (input)="updateRegisterData('password', $any($event.target).value)"
+              name="password"
+              required
+              [class]="'w-full px-3 py-2 bg-github-bg-canvas border rounded-md text-github-text-primary placeholder-github-text-muted focus:outline-none transition-all duration-200 ' + 
+                       (hasFieldError('password') ? 
+                        'border-github-accent-danger focus:border-github-accent-danger focus:ring-1 focus:ring-github-accent-danger' : 
+                        'border-github-border-default focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue')"
+              placeholder="Crea una contraseña segura"
+            >
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+              <lucide-angular [img]="icons.Lock" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+            </div>
+          </div>
+          <!-- Validación para password -->
+          <div *ngIf="registerData().password && registerData().password.length > 0" class="mt-1">
+            <div *ngIf="registerData().password.length < 6" class="text-xs text-github-accent-danger flex items-center">
+              <lucide-angular [img]="icons.AlertCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Debe tener al menos 6 caracteres
+            </div>
+            <div *ngIf="registerData().password.length >= 6" class="text-xs text-github-accent-primary flex items-center">
+              <lucide-angular [img]="icons.CheckCircle" class="w-3 h-3 mr-1"></lucide-angular>
+              Contraseña válida
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit button -->
+        <button 
+          type="submit"
+          [disabled]="authStore.isLoading() || !registerValidation().isValid"
+          class="w-full bg-github-accent-primary hover:bg-green-600 disabled:bg-github-text-muted disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-github-accent-primary focus:ring-offset-2 focus:ring-offset-github-bg-tertiary"
+        >
+          <span *ngIf="!authStore.isLoading()" class="flex items-center justify-center">
+            <lucide-angular [img]="icons.UserPlus" class="w-4 h-4 mr-2"></lucide-angular>
+            Crear cuenta
+          </span>
+          
+          <span *ngIf="authStore.isLoading()" class="flex items-center justify-center">
+            <lucide-angular [img]="icons.Loader2" class="w-4 h-4 mr-2 animate-spin"></lucide-angular>
+            Creando cuenta...
+          </span>
+        </button>
+      </form>
+
+      <!-- Mensajes de estado -->
+      <div *ngIf="authStore.error()" 
+           class="mt-4 p-3 bg-red-500/10 border border-github-accent-danger rounded-md">
+        <div class="flex items-center">
+          <lucide-angular [img]="icons.AlertCircle" class="w-4 h-4 text-github-accent-danger mr-2"></lucide-angular>
+          <p class="text-sm text-github-accent-danger">{{ authStore.error() }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="authStore.success()" 
+           class="mt-4 p-3 bg-green-500/10 border border-github-accent-primary rounded-md">
+        <div class="flex items-center">
+          <lucide-angular [img]="icons.CheckCircle" class="w-4 h-4 text-github-accent-primary mr-2"></lucide-angular>
+          <p class="text-sm text-github-accent-primary">{{ authStore.success() }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

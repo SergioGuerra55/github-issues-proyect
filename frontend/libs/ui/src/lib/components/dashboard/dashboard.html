@@ -1,0 +1,174 @@
+<div class="min-h-screen bg-github-bg-primary font-github">
+  <!-- Header estilo GitHub -->
+  <header class="border-b border-github-border-default bg-github-bg-secondary">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <div class="flex items-center justify-center w-8 h-8 bg-github-bg-tertiary border border-github-border-default rounded-md mr-3">
+            <lucide-angular [img]="icons.Github" class="w-5 h-5 text-github-text-primary"></lucide-angular>
+          </div>
+          <h1 class="text-lg font-semibold text-github-text-primary">Issues Manager</h1>
+        </div>
+
+        <!-- User menu -->
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center text-github-text-secondary">
+            <lucide-angular [img]="icons.User" class="w-4 h-4 mr-2"></lucide-angular>
+            <span class="text-sm font-medium">{{ authStore.user()?.username }}</span>
+          </div>
+          <button
+            (click)="onLogout()"
+            class="flex items-center px-3 py-1.5 text-github-text-secondary hover:text-github-text-primary hover:bg-github-bg-tertiary rounded-md transition-all duration-200 text-sm">
+            <lucide-angular [img]="icons.LogOut" class="w-4 h-4 mr-2"></lucide-angular>
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Welcome Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-github-text-primary mb-2">
+        Bienvenido, {{ authStore.user()?.username }}
+      </h2>
+      <p class="text-github-text-secondary">
+        Explora y gestiona issues de repositorios públicos de GitHub
+      </p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-6 mb-6">
+      <div class="flex items-center mb-4">
+        <lucide-angular [img]="icons.Search" class="w-5 h-5 text-github-text-secondary mr-2"></lucide-angular>
+        <h3 class="text-lg font-semibold text-github-text-primary">
+          Buscar repositorio
+        </h3>
+      </div>
+      
+      <form (ngSubmit)="onSearch()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-github-text-primary mb-2">
+            URL del repositorio de GitHub
+          </label>
+          <div class="flex gap-3">
+            <div class="relative flex-1">
+              <input
+                type="url"
+                [value]="repoUrl()"
+                (input)="updateRepoUrl($any($event.target).value)"
+                placeholder="https://github.com/owner/repository"
+                class="w-full px-3 py-2 bg-github-bg-canvas border border-github-border-default rounded-md text-github-text-primary placeholder-github-text-muted focus:border-github-accent-blue focus:ring-1 focus:ring-github-accent-blue focus:outline-none transition-all duration-200"
+                required>
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                <lucide-angular [img]="icons.Github" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+              </div>
+            </div>
+            <button
+              type="submit"
+              [disabled]="githubStore.isLoading() || !repoUrl().trim()"
+              class="px-4 py-2 bg-github-accent-primary hover:bg-green-600 disabled:bg-github-text-muted disabled:cursor-not-allowed text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-github-accent-primary focus:ring-offset-2 focus:ring-offset-github-bg-tertiary">
+              
+              <span *ngIf="!githubStore.isLoading()" class="flex items-center">
+                <lucide-angular [img]="icons.Search" class="w-4 h-4 mr-2"></lucide-angular>
+                Buscar
+              </span>
+              
+              <span *ngIf="githubStore.isLoading()" class="flex items-center">
+                <lucide-angular [img]="icons.Loader2" class="w-4 h-4 mr-2 animate-spin"></lucide-angular>
+                Buscando...
+              </span>
+            </button>
+          </div>
+          <p class="mt-2 text-xs text-github-text-muted">
+            Introduce la URL completa de un repositorio público de GitHub
+          </p>
+        </div>
+      </form>
+
+      <!-- Quick examples -->
+      <div class="mt-4 pt-4 border-t border-github-border-muted">
+        <p class="text-xs text-github-text-secondary mb-2">Ejemplos rápidos:</p>
+        <div class="flex flex-wrap gap-2">
+          <button 
+            (click)="updateRepoUrl('https://github.com/facebook/react')"
+            class="inline-flex items-center px-2.5 py-1 bg-github-bg-canvas hover:bg-github-bg-secondary border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded text-xs transition-colors">
+            facebook/react
+          </button>
+          <button 
+            (click)="updateRepoUrl('https://github.com/microsoft/vscode')"
+            class="inline-flex items-center px-2.5 py-1 bg-github-bg-canvas hover:bg-github-bg-secondary border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded text-xs transition-colors">
+            microsoft/vscode
+          </button>
+          <button 
+            (click)="updateRepoUrl('https://github.com/angular/angular')"
+            class="inline-flex items-center px-2.5 py-1 bg-github-bg-canvas hover:bg-github-bg-secondary border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded text-xs transition-colors">
+            angular/angular
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="githubStore.error()" 
+         class="bg-red-50 border border-github-accent-danger rounded-lg p-4 mb-6">
+      <div class="flex items-start">
+        <lucide-angular [img]="icons.AlertCircle" class="w-5 h-5 text-github-accent-danger mr-3 mt-0.5 flex-shrink-0"></lucide-angular>
+        <div>
+          <h4 class="text-sm font-medium text-github-accent-danger mb-1">
+            Error al buscar repositorio
+          </h4>
+          <p class="text-sm text-red-700">{{ githubStore.error() }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issues List Container -->
+    <div *ngIf="githubStore.repository()">
+      <lib-issues-list></lib-issues-list>
+    </div>
+
+    <!-- Empty state cuando no hay repositorio seleccionado -->
+    <div *ngIf="!githubStore.repository() && !githubStore.isLoading() && !githubStore.error()" 
+         class="text-center py-12">
+      <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-8">
+        <lucide-angular [img]="icons.Github" class="w-12 h-12 text-github-text-muted mx-auto mb-4"></lucide-angular>
+        <h3 class="text-lg font-medium text-github-text-primary mb-2">
+          Busca un repositorio para comenzar
+        </h3>
+        <p class="text-github-text-secondary text-sm max-w-md mx-auto">
+          Introduce la URL de cualquier repositorio público de GitHub para explorar sus issues de forma organizada y visual.
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading state global -->
+    <div *ngIf="githubStore.isLoading() && !githubStore.repository()" 
+         class="text-center py-12">
+      <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-8">
+        <div class="flex items-center justify-center mb-4">
+          <lucide-angular [img]="icons.Loader2" class="w-8 h-8 text-github-accent-blue animate-spin"></lucide-angular>
+        </div>
+        <h3 class="text-lg font-medium text-github-text-primary mb-2">
+          Cargando repositorio...
+        </h3>
+        <p class="text-github-text-secondary text-sm">
+          Obteniendo información del repositorio y sus issues
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer info -->
+    <div class="mt-12 pt-8 border-t border-github-border-muted text-center">
+      <p class="text-xs text-github-text-muted">
+        Desarrollado con 
+        <span class="text-github-accent-danger">♥</span>
+        usando Angular, Strapi y GitHub API
+      </p>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,189 @@
+<div class="space-y-6">
+  <!-- Header con información del repositorio -->
+  <div *ngIf="githubStore.repository()" class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-github-text-primary mb-1">
+          {{ githubStore.repository()?.owner }}/{{ githubStore.repository()?.repo }}
+        </h3>
+        <p class="text-github-text-secondary text-sm">
+          {{ githubStore.issues().length }} issues encontradas
+        </p>
+      </div>
+      <button
+        (click)="openInGitHub(githubStore.repository()?.url || '')"
+        class="flex items-center px-3 py-1.5 bg-github-bg-canvas hover:bg-github-bg-secondary border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded-md transition-all duration-200 text-sm">
+        <lucide-angular [img]="icons.ExternalLink" class="w-4 h-4 mr-2"></lucide-angular>
+        Ver en GitHub
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de issues -->
+  <div class="space-y-0 border border-github-border-default rounded-lg divide-y divide-github-border-default bg-github-bg-tertiary">
+    <div 
+      *ngFor="let issue of githubStore.issues(); trackBy: trackByIssueId; let last = last"
+      class="p-4 hover:bg-github-bg-canvas transition-colors duration-150 cursor-pointer group"
+      [class.rounded-t-lg]="issue === githubStore.issues()[0]"
+      [class.rounded-b-lg]="last"
+      (click)="openInGitHub(issue.html_url)">
+      
+      <!-- Header de la issue -->
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center space-x-3">
+          <!-- Estado de la issue -->
+          <div class="flex items-center">
+            <div [class]="'flex items-center justify-center w-6 h-6 rounded-full ' + 
+                         (issue.state === 'open' ? 'bg-github-accent-primary/20' : 'bg-purple-500/20')">
+              <lucide-angular 
+                [img]="getStateIcon(issue.state)" 
+                [class]="'w-4 h-4 ' + (issue.state === 'open' ? 'text-github-accent-primary' : 'text-purple-400')">
+              </lucide-angular>
+            </div>
+          </div>
+          
+          <!-- Número de issue -->
+          <span class="text-github-text-muted text-sm font-mono">
+            #{{ issue.number }}
+          </span>
+
+          <!-- Badge de estado -->
+          <span [class]="'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + 
+                        (issue.state === 'open' ? 'bg-github-accent-primary/10 text-github-accent-primary border border-github-accent-primary/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20')">
+            {{ issue.state === 'open' ? 'Abierta' : 'Cerrada' }}
+          </span>
+        </div>
+
+        <!-- Botón de enlace externo -->
+        <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <lucide-angular [img]="icons.ExternalLink" class="w-4 h-4 text-github-text-muted"></lucide-angular>
+        </div>
+      </div>
+
+      <!-- Título de la issue -->
+      <h4 class="text-base font-medium text-github-text-primary mb-2 group-hover:text-github-accent-blue transition-colors duration-200 leading-tight">
+        {{ issue.title }}
+      </h4>
+
+      <!-- Labels (si existen) -->
+      <div *ngIf="issue.labels && issue.labels.length > 0" class="flex flex-wrap gap-1.5 mb-3">
+        <span 
+          *ngFor="let label of issue.labels.slice(0, 4)"
+          class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border"
+          [style.background-color]="'#' + label.color + '15'"
+          [style.color]="'#' + label.color"
+          [style.border-color]="'#' + label.color + '30'">
+          {{ label.name }}
+        </span>
+        <span *ngIf="issue.labels.length > 4" 
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-github-bg-canvas border border-github-border-default text-github-text-muted">
+          +{{ issue.labels.length - 4 }}
+        </span>
+      </div>
+
+      <!-- Descripción (truncada) -->
+      <p *ngIf="issue.body" class="text-github-text-secondary text-sm mb-3 leading-relaxed line-clamp-2">
+        {{ truncateText(issue.body, 120) }}
+      </p>
+
+      <!-- Metadata footer -->
+      <div class="flex items-center justify-between text-xs text-github-text-muted">
+        <div class="flex items-center space-x-4">
+          <!-- Autor -->
+          <div class="flex items-center space-x-2">
+            <img 
+              [src]="issue.user.avatar_url" 
+              [alt]="issue.user.login"
+              class="w-5 h-5 rounded-full border border-github-border-default">
+            <span class="font-medium">{{ issue.user.login }}</span>
+          </div>
+
+          <!-- Fecha de creación -->
+          <div class="flex items-center space-x-1">
+            <lucide-angular [img]="icons.Calendar" class="w-3.5 h-3.5"></lucide-angular>
+            <span>abierta {{ formatRelativeDate(issue.created_at) }}</span>
+          </div>
+
+          <!-- Comentarios -->
+          <div *ngIf="issue.comments > 0" class="flex items-center space-x-1">
+            <lucide-angular [img]="icons.MessageSquare" class="w-3.5 h-3.5"></lucide-angular>
+            <span>{{ issue.comments }} {{ issue.comments === 1 ? 'comentario' : 'comentarios' }}</span>
+          </div>
+        </div>
+
+        <!-- Fecha de actualización -->
+        <div *ngIf="issue.updated_at !== issue.created_at">
+          <span>actualizada {{ formatRelativeDate(issue.updated_at) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación estilo GitHub -->
+  <div *ngIf="githubStore.issues().length > 0" 
+       class="flex items-center justify-between mt-6">
+    
+    <!-- Información de página -->
+    <div class="flex items-center space-x-2 text-sm text-github-text-secondary">
+      <span>Página {{ currentPage() }}</span>
+    </div>
+
+    <!-- Controles de paginación -->
+    <div class="flex items-center space-x-2">
+      <button
+        (click)="previousPage()"
+        [disabled]="currentPage() === 1 || githubStore.isLoading()"
+        class="flex items-center px-3 py-1.5 bg-github-bg-canvas hover:bg-github-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded-md transition-all duration-200 text-sm">
+        <lucide-angular [img]="icons.ChevronLeft" class="w-4 h-4 mr-1"></lucide-angular>
+        Anterior
+      </button>
+
+      <button
+        (click)="nextPage()"
+        [disabled]="githubStore.isLoading()"
+        class="flex items-center px-3 py-1.5 bg-github-bg-canvas hover:bg-github-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed border border-github-border-default text-github-text-secondary hover:text-github-text-primary rounded-md transition-all duration-200 text-sm">
+        Siguiente
+        <lucide-angular [img]="icons.ChevronRight" class="w-4 h-4 ml-1"></lucide-angular>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="githubStore.isLoading()" 
+       class="text-center py-12">
+    <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-8">
+      <div class="flex items-center justify-center mb-4">
+        <lucide-angular [img]="icons.Loader2" class="w-6 h-6 text-github-accent-blue animate-spin"></lucide-angular>
+      </div>
+      <p class="text-github-text-secondary">Cargando issues...</p>
+    </div>
+  </div>
+
+  <!-- Estado vacío -->
+  <div *ngIf="!githubStore.isLoading() && githubStore.issues().length === 0 && githubStore.repository()" 
+       class="text-center py-12">
+    <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-8">
+      <lucide-angular [img]="icons.AlertCircle" class="w-12 h-12 text-github-text-muted mx-auto mb-4"></lucide-angular>
+      <h3 class="text-lg font-medium text-github-text-primary mb-2">
+        No se encontraron issues
+      </h3>
+      <p class="text-github-text-secondary text-sm max-w-md mx-auto">
+        Este repositorio no tiene issues públicas o podría estar vacío.
+      </p>
+    </div>
+  </div>
+
+  <!-- Estado inicial: sin repositorio seleccionado -->
+  <div *ngIf="!githubStore.repository() && !githubStore.isLoading()" 
+       class="text-center py-16">
+    <div class="bg-github-bg-tertiary border border-github-border-default rounded-lg p-8">
+      <lucide-angular [img]="icons.Search" class="w-12 h-12 text-github-text-muted mx-auto mb-4"></lucide-angular>
+      <h3 class="text-lg font-medium text-github-text-primary mb-2">
+        Busca un repositorio para comenzar
+      </h3>
+      <p class="text-github-text-secondary text-sm max-w-md mx-auto">
+        Introduce la URL de un repositorio de GitHub arriba para explorar sus issues de forma organizada.
+      </p>
+    </div>
+  </div>
+</div>
